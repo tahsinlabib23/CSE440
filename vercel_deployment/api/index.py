@@ -7,9 +7,7 @@ import os
 
 app = FastAPI()
 
-# Load the model and vectorizer
-# In Vercel, the current working directory for serverless functions might vary,
-# so we construct the absolute path relative to this file.
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "model.pkl")
 VECTORIZER_PATH = os.path.join(BASE_DIR, "vectorizer.pkl")
