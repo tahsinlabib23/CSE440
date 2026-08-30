@@ -1,0 +1,5 @@
+fastapi
+scikit-learn
+joblib
+numpy
+scipy

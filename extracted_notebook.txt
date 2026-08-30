@@ -1,0 +1,3316 @@
+
+--- Cell 0 (code) ---
+from google.colab import drive
+drive.mount('/content/drive')
+
+--- Cell 1 (markdown) ---
+DATASET LOADING
+
+--- Cell 2 (code) ---
+import pandas as pd
+
+--- Cell 3 (code) ---
+df = pd.read_csv("/content/drive/MyDrive/legal_text_classification.csv")
+df.head(7)
+
+--- Cell 4 (markdown) ---
+**EDA**
+
+--- Cell 5 (code) ---
+
+print("Number of rows:", df.shape[0])
+print("Number of columns:", df.shape[1])
+
+print("\nColumn names:")
+print(df.columns.tolist())
+
+print("\nData types:")
+print(df.dtypes)
+
+print("\nFirst 5 rows:")
+display(df.head())
+
+print("\nStatistical summary:")
+display(df.describe(include="all"))
+
+--- Cell 6 (code) ---
+
+
+--- Cell 7 (code) ---
+missing_values = df.isnull().sum()
+
+print("Missing values in each column:")
+print(missing_values[missing_values > 0])
+
+
+missing_percentage = (df.isnull().sum() / len(df)) * 100
+
+print("\nMissing value percentage:")
+print(missing_percentage[missing_percentage > 0])
+
+--- Cell 8 (code) ---
+import matplotlib.pyplot as plt
+
+missing = df.isnull().sum()
+missing = missing[missing > 0].sort_values(ascending=False)
+
+plt.figure(figsize=(10, 5))
+missing.plot(kind="bar")
+plt.title("Missing Values by Column")
+plt.xlabel("Columns")
+plt.ylabel("Number of Missing Values")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+--- Cell 9 (code) ---
+df.info()
+
+--- Cell 10 (code) ---
+df.shape
+
+--- Cell 11 (code) ---
+print(df["case_outcome"].unique())
+
+--- Cell 12 (code) ---
+print(df["case_outcome"].value_counts())
+
+--- Cell 13 (code) ---
+print(df.isnull().sum())
+
+--- Cell 14 (code) ---
+df = df.dropna(subset=["case_text"])
+
+--- Cell 15 (code) ---
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.figure(figsize=(10, 6))
+
+sns.countplot(
+    data=df,
+    x="case_outcome",
+    order=df["case_outcome"].value_counts().index
+)
+
+plt.title("Distribution of Legal Case Outcomes")
+plt.xlabel("Case Outcome")
+plt.ylabel("Number of Cases")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+--- Cell 16 (code) ---
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+
+classes = df["case_outcome"].unique()
+
+for category in classes:
+    text = " ".join(
+        df[df["case_outcome"] == category]["case_text"].astype(str)
+    )
+
+    wordcloud = WordCloud(
+        width=800,
+        height=400,
+        background_color="white"
+    ).generate(text)
+
+    plt.figure(figsize=(12, 6))
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    plt.title("Word Cloud - " + category)
+    plt.show()
+
+--- Cell 17 (code) ---
+from wordcloud import WordCloud
+
+cited_text = " ".join(
+    df[df["case_outcome"] == "cited"]["case_text"]
+)
+
+distinguished_text = " ".join(
+    df[df["case_outcome"] == "distinguished"]["case_text"]
+)
+wordcloud_cited = WordCloud(
+    width=800,
+    height=400,
+    background_color="white"
+).generate(cited_text)
+
+plt.figure(figsize=(12, 6))
+plt.imshow(wordcloud_cited, interpolation="bilinear")
+plt.axis("off")
+plt.title("Word Cloud - Cited")
+plt.show()
+wordcloud_distinguished = WordCloud(
+    width=800,
+    height=400,
+    background_color="white"
+).generate(distinguished_text)
+
+plt.figure(figsize=(12, 6))
+plt.imshow(wordcloud_distinguished, interpolation="bilinear")
+plt.axis("off")
+plt.title("Word Cloud - Distinguished")
+plt.show()
+
+--- Cell 18 (code) ---
+from wordcloud import WordCloud
+
+cited_text = " ".join(
+    df[df["case_outcome"] == "cited"]["case_title"]
+)
+
+distinguished_text = " ".join(
+    df[df["case_outcome"] == "distinguished"]["case_title"]
+)
+wordcloud_cited = WordCloud(
+    width=800,
+    height=400,
+    background_color="white"
+).generate(cited_text)
+
+plt.figure(figsize=(12, 6))
+plt.imshow(wordcloud_cited, interpolation="bilinear")
+plt.axis("off")
+plt.title("Word Cloud - Cited")
+plt.show()
+wordcloud_distinguished = WordCloud(
+    width=800,
+    height=400,
+    background_color="white"
+).generate(distinguished_text)
+
+plt.figure(figsize=(12, 6))
+plt.imshow(wordcloud_distinguished, interpolation="bilinear")
+plt.axis("off")
+plt.title("Word Cloud - Distinguished")
+plt.show()
+
+--- Cell 19 (code) ---
+
+df["text_length"] = df["case_text"].fillna("").apply(len)
+
+print("Text length statistics:")
+print(df["text_length"].describe())
+
+--- Cell 20 (code) ---
+df["word_count"] = df["case_text"].str.split().str.len()
+plt.figure(figsize=(10, 6))
+
+sns.histplot(df["word_count"], bins=50, kde=True)
+
+plt.title("Distribution of Case Text Lengths")
+plt.xlabel("Number of Words")
+plt.ylabel("Frequency")
+plt.tight_layout()
+plt.show()
+plt.figure(figsize=(10, 5))
+
+sns.boxplot(x=df["word_count"])
+
+plt.title("Boxplot of Case Text Lengths")
+plt.xlabel("Word Count")
+plt.tight_layout()
+plt.show()
+
+--- Cell 21 (code) ---
+df["word_count"] = df["case_title"].str.split().str.len()
+plt.figure(figsize=(10, 6))
+
+sns.histplot(df["word_count"], bins=50, kde=True)
+
+plt.title("Distribution of Case Title Lengths")
+plt.xlabel("Number of Words")
+plt.ylabel("Frequency")
+plt.tight_layout()
+plt.show()
+plt.figure(figsize=(10, 5))
+
+sns.boxplot(x=df["word_count"])
+
+plt.title("Boxplot of Case Text Lengths")
+plt.xlabel("Word Count")
+plt.tight_layout()
+plt.show()
+
+--- Cell 22 (markdown) ---
+PREPROCESSING
+
+--- Cell 23 (code) ---
+df = df.dropna(
+    subset=["case_outcome", "case_text"]
+).copy()
+
+print(df.shape)
+
+--- Cell 24 (code) ---
+df["case_outcome"] = (
+    df["case_outcome"]
+    .astype(str)
+    .str.strip()
+)
+
+df["case_title"] = (
+    df["case_title"]
+    .fillna("")
+    .astype(str)
+    .str.strip()
+)
+
+df["case_text"] = (
+    df["case_text"]
+    .astype(str)
+    .str.strip()
+)
+
+--- Cell 25 (code) ---
+df["case_title_original"] = df["case_title"]
+df["case_text_original"] = df["case_text"]
+
+--- Cell 26 (code) ---
+import re
+import unicodedata
+
+def normalize_for_duplicate_detection(text):
+    text = str(text)
+
+
+    text = unicodedata.normalize("NFKC", text)
+
+
+    text = text.lower()
+
+
+    text = re.sub(r"\s+", " ", text)
+
+    return text.strip()
+
+--- Cell 27 (code) ---
+df["title_duplicate"] = df["case_title"].apply(
+    normalize_for_duplicate_detection
+)
+
+df["text_duplicate"] = df["case_text"].apply(
+    normalize_for_duplicate_detection
+)
+
+--- Cell 28 (code) ---
+text_duplicates = df["text_duplicate"].duplicated(keep=False)
+
+print(
+    "Rows belonging to duplicated case texts:",
+    text_duplicates.sum()
+)
+
+--- Cell 29 (code) ---
+label_counts_per_text = (
+    df.groupby("text_duplicate")["case_outcome"]
+      .nunique()
+)
+
+conflicting_texts = label_counts_per_text[
+    label_counts_per_text > 1
+]
+
+print(
+    "Number of text groups with conflicting labels:",
+    len(conflicting_texts)
+)
+
+--- Cell 30 (code) ---
+print(
+    "Rows with duplicated titles:",
+    (df["title_duplicate"].duplicated(keep=False)).sum()
+)
+
+--- Cell 31 (code) ---
+title_label_counts = (
+    df.groupby("title_duplicate")["case_outcome"]
+      .nunique()
+)
+
+conflicting_titles = title_label_counts[
+    title_label_counts > 1
+]
+
+print(
+    "Titles associated with multiple outcomes:",
+    len(conflicting_titles)
+)
+
+--- Cell 32 (code) ---
+df["model_text"] = (
+    "TITLE: " +
+    df["case_title"] +
+    " TEXT: " +
+    df["case_text"]
+)
+
+--- Cell 33 (code) ---
+def clean_legal_text(text):
+    text = str(text)
+
+
+    text = unicodedata.normalize("NFKC", text)
+
+
+    text = re.sub(r"\s+", " ", text)
+
+    return text.strip()
+
+--- Cell 34 (code) ---
+df["model_text"] = df["model_text"].apply(clean_legal_text)
+
+--- Cell 35 (code) ---
+df["model_text"] = df["model_text"].str.strip()
+
+df = df[df["model_text"].str.len() > 0].copy()
+
+print(df.shape)
+
+--- Cell 36 (code) ---
+df["group_id"] = pd.factorize(
+    df["text_duplicate"]
+)[0]
+
+--- Cell 37 (code) ---
+X = df["model_text"]
+y = df["case_outcome"]
+groups = df["group_id"]
+
+--- Cell 38 (code) ---
+case_ids = df["case_id"]
+
+--- Cell 39 (code) ---
+
+
+--- Cell 40 (code) ---
+
+
+--- Cell 41 (markdown) ---
+ Train/Validation/Test Split
+
+--- Cell 42 (code) ---
+from sklearn.model_selection import train_test_split
+
+X_train, X_temp, y_train, y_temp, ids_train, ids_temp = train_test_split(
+    X,
+    y,
+    case_ids,
+    test_size=0.20,
+    random_state=42,
+    stratify=y
+)
+
+X_val, X_test, y_val, y_test, ids_val, ids_test = train_test_split(
+    X_temp,
+    y_temp,
+    ids_temp,
+    test_size=0.50,
+    random_state=42,
+    stratify=y_temp
+)
+
+--- Cell 43 (markdown) ---
+**Text Representation**
+
+
+--- Cell 44 (markdown) ---
+TFIDF
+
+--- Cell 45 (code) ---
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+--- Cell 46 (code) ---
+tfidf = TfidfVectorizer(
+    lowercase=True,
+    stop_words=None,
+    ngram_range=(1, 2),
+    min_df=2,
+    max_df=0.98,
+    sublinear_tf=True,
+    max_features=200000
+)
+
+--- Cell 47 (code) ---
+X_train_tfidf = tfidf.fit_transform(X_train)
+
+X_val_tfidf = tfidf.transform(X_val)
+
+X_test_tfidf = tfidf.transform(X_test)
+
+--- Cell 48 (markdown) ---
+WORD2VEC then Average
+
+--- Cell 49 (code) ---
+!pip install gensim
+
+--- Cell 50 (code) ---
+from gensim.models import Word2Vec
+
+--- Cell 51 (code) ---
+import re
+
+--- Cell 52 (code) ---
+def tokenize_text(text):
+    text = str(text).lower()
+    text = re.sub(r"\s+", " ", text)
+    tokens = text.split()
+    return tokens
+
+--- Cell 53 (code) ---
+train_tokens = [
+    tokenize_text(text)
+    for text in X_train
+]
+
+--- Cell 54 (code) ---
+word2vec_model = Word2Vec(
+    sentences=train_tokens,
+    vector_size=200,
+    window=5,
+    min_count=2,
+    workers=4,
+    sg=1
+)
+
+--- Cell 55 (code) ---
+val_tokens = [
+    tokenize_text(text)
+    for text in X_val
+]
+
+test_tokens = [
+    tokenize_text(text)
+    for text in X_test
+]
+
+--- Cell 56 (code) ---
+import numpy as np
+
+def document_vector(tokens, model):
+    vectors = [
+        model.wv[word]
+        for word in tokens
+        if word in model.wv
+    ]
+
+    if not vectors:
+        return np.zeros(model.vector_size)
+
+    return np.mean(vectors, axis=0)
+
+--- Cell 57 (code) ---
+X_train_w2v = np.array([
+    document_vector(tokens, word2vec_model)
+    for tokens in train_tokens
+])
+
+X_val_w2v = np.array([
+    document_vector(tokens, word2vec_model)
+    for tokens in val_tokens
+])
+
+X_test_w2v = np.array([
+    document_vector(tokens, word2vec_model)
+    for tokens in test_tokens
+])
+
+--- Cell 58 (code) ---
+print(X_train_w2v.shape)
+print(X_val_w2v.shape)
+print(X_test_w2v.shape)
+
+--- Cell 59 (code) ---
+
+
+--- Cell 60 (markdown) ---
+**ML MODELS**
+
+--- Cell 61 (code) ---
+#LOGISTOC REGRESSION
+from sklearn.linear_model import LogisticRegression
+
+--- Cell 62 (code) ---
+lr_1 = LogisticRegression(
+    C=2.0,
+    max_iter=2000,
+    solver="saga",
+    class_weight="balanced",
+    random_state=42,
+    n_jobs=-1
+)
+
+lr_1.fit(X_train_tfidf, y_train)
+
+--- Cell 63 (code) ---
+lr_2 = LogisticRegression(
+    C=2.5,
+    max_iter=1000,
+    solver="saga",
+    class_weight=None,
+    random_state=42,
+    n_jobs=-1,
+    verbose=1
+)
+
+lr_2.fit(X_train_tfidf, y_train)
+
+--- Cell 64 (code) ---
+lr_3 = LogisticRegression(
+    C=10.0,
+    max_iter=500,
+    solver="saga",
+    class_weight=None,
+    random_state=42,
+    n_jobs=-1,
+    verbose=1
+)
+
+lr_3.fit(X_train_tfidf, y_train)
+
+--- Cell 65 (code) ---
+#REPORTS OF LR
+
+--- Cell 66 (code) ---
+from sklearn.metrics import f1_score
+
+y_val_pred_lr1 = lr_1.predict(X_val_tfidf)
+y_val_pred_lr2 = lr_2.predict(X_val_tfidf)
+y_val_pred_lr3 = lr_3.predict(X_val_tfidf)
+
+f1_lr1 = f1_score(y_val, y_val_pred_lr1, average="macro")
+f1_lr2 = f1_score(y_val, y_val_pred_lr2, average="macro")
+f1_lr3 = f1_score(y_val, y_val_pred_lr3, average="macro")
+
+print("LR 1 (C=0.1):", f1_lr1)
+print("LR 2 (C=1.0):", f1_lr2)
+print("LR 3 (C=10.0):", f1_lr3)
+
+--- Cell 67 (code) ---
+best_lr = lr_3
+
+--- Cell 68 (code) ---
+y_test_pred_lr = best_lr.predict(X_test_tfidf)
+
+--- Cell 69 (code) ---
+from sklearn.metrics import accuracy_score, f1_score
+
+accuracy_lr = accuracy_score(y_test, y_test_pred_lr)
+f1_lr = f1_score(y_test, y_test_pred_lr, average="macro")
+
+print("Logistic Regression Test Accuracy:", accuracy_lr)
+print("Logistic Regression Test Macro F1:", f1_lr)
+
+--- Cell 70 (code) ---
+from sklearn.metrics import classification_report
+
+print(classification_report(y_test, y_test_pred_lr))
+
+--- Cell 71 (code) ---
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+cm = confusion_matrix(y_test, y_test_pred_lr)
+
+plt.figure(figsize=(10, 8))
+
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt="d",
+    xticklabels=sorted(y_test.unique()),
+    yticklabels=sorted(y_test.unique())
+)
+
+plt.title("Logistic Regression - Confusion Matrix")
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.tight_layout()
+plt.show()
+
+--- Cell 72 (code) ---
+#NAIVE BAYES
+
+--- Cell 73 (code) ---
+from sklearn.naive_bayes import MultinomialNB
+
+nb_1 = MultinomialNB(
+    alpha=0.01
+)
+
+nb_1.fit(X_train_tfidf, y_train)
+
+--- Cell 74 (code) ---
+nb_2 = MultinomialNB(
+    alpha=0.1
+)
+
+nb_2.fit(X_train_tfidf, y_train)
+
+--- Cell 75 (code) ---
+nb_3 = MultinomialNB(
+    alpha=1.0
+)
+
+nb_3.fit(X_train_tfidf, y_train)
+
+--- Cell 76 (code) ---
+from sklearn.metrics import accuracy_score, f1_score
+
+y_val_pred_nb1 = nb_1.predict(X_val_tfidf)
+y_val_pred_nb2 = nb_2.predict(X_val_tfidf)
+y_val_pred_nb3 = nb_3.predict(X_val_tfidf)
+
+nb1_accuracy = accuracy_score(y_val, y_val_pred_nb1)
+nb1_f1 = f1_score(y_val, y_val_pred_nb1, average="macro")
+
+nb2_accuracy = accuracy_score(y_val, y_val_pred_nb2)
+nb2_f1 = f1_score(y_val, y_val_pred_nb2, average="macro")
+
+nb3_accuracy = accuracy_score(y_val, y_val_pred_nb3)
+nb3_f1 = f1_score(y_val, y_val_pred_nb3, average="macro")
+
+print("NB 1 (alpha=0.01)")
+print("Validation Accuracy:", nb1_accuracy)
+print("Validation Macro F1:", nb1_f1)
+
+print("\nNB 2 (alpha=0.1)")
+print("Validation Accuracy:", nb2_accuracy)
+print("Validation Macro F1:", nb2_f1)
+
+print("\nNB 3 (alpha=1.0)")
+print("Validation Accuracy:", nb3_accuracy)
+print("Validation Macro F1:", nb3_f1)
+
+--- Cell 77 (code) ---
+nb_tuning_results = pd.DataFrame({
+    "Configuration": ["alpha=0.01", "alpha=0.1", "alpha=1.0"],
+    "Validation Accuracy": [
+        nb1_accuracy,
+        nb2_accuracy,
+        nb3_accuracy
+    ],
+    "Validation Macro F1": [
+        nb1_f1,
+        nb2_f1,
+        nb3_f1
+    ]
+})
+
+nb_tuning_results
+
+--- Cell 78 (code) ---
+best_nb = nb_1
+
+--- Cell 79 (code) ---
+y_test_pred_nb = best_nb.predict(X_test_tfidf)
+
+--- Cell 80 (code) ---
+from sklearn.metrics import accuracy_score
+
+nb_test_accuracy = accuracy_score(y_test, y_test_pred_nb)
+
+print("Naive Bayes Test Accuracy:", nb_test_accuracy)
+
+--- Cell 81 (code) ---
+from sklearn.metrics import f1_score
+
+nb_test_f1 = f1_score(
+    y_test,
+    y_test_pred_nb,
+    average="macro"
+)
+
+print("Naive Bayes Test Macro F1:", nb_test_f1)
+
+--- Cell 82 (code) ---
+from sklearn.metrics import classification_report
+
+print(classification_report(
+    y_test,
+    y_test_pred_nb
+))
+
+--- Cell 83 (code) ---
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+cm_nb = confusion_matrix(y_test, y_test_pred_nb)
+
+plt.figure(figsize=(10, 8))
+
+sns.heatmap(
+    cm_nb,
+    annot=True,
+    fmt="d",
+    xticklabels=sorted(y_test.unique()),
+    yticklabels=sorted(y_test.unique())
+)
+
+plt.title("Naive Bayes - Confusion Matrix")
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.tight_layout()
+plt.show()
+
+--- Cell 84 (code) ---
+#RANDOM FOREST
+
+--- Cell 85 (code) ---
+from sklearn.ensemble import RandomForestClassifier
+
+rf_1 = RandomForestClassifier(
+    n_estimators=100,
+    max_depth=None,
+    min_samples_split=2,
+    class_weight=None,
+    random_state=42,
+    n_jobs=-1
+)
+
+rf_1.fit(X_train_tfidf, y_train)
+
+--- Cell 86 (code) ---
+rf_2 = RandomForestClassifier(
+    n_estimators=300,
+    max_depth=None,
+    min_samples_split=2,
+    class_weight="balanced",
+    random_state=42,
+    n_jobs=-1
+)
+
+rf_2.fit(X_train_tfidf, y_train)
+
+--- Cell 87 (code) ---
+rf_3 = RandomForestClassifier(
+    n_estimators=300,
+    max_depth=30,
+    min_samples_split=5,
+    min_samples_leaf=2,
+    class_weight="balanced",
+    random_state=42,
+    n_jobs=-1
+)
+
+rf_3.fit(X_train_tfidf, y_train)
+
+--- Cell 88 (code) ---
+from sklearn.metrics import accuracy_score, f1_score
+
+y_val_pred_rf1 = rf_1.predict(X_val_tfidf)
+y_val_pred_rf2 = rf_2.predict(X_val_tfidf)
+y_val_pred_rf3 = rf_3.predict(X_val_tfidf)
+
+rf1_accuracy = accuracy_score(y_val, y_val_pred_rf1)
+rf1_f1 = f1_score(y_val, y_val_pred_rf1, average="macro")
+
+rf2_accuracy = accuracy_score(y_val, y_val_pred_rf2)
+rf2_f1 = f1_score(y_val, y_val_pred_rf2, average="macro")
+
+rf3_accuracy = accuracy_score(y_val, y_val_pred_rf3)
+rf3_f1 = f1_score(y_val, y_val_pred_rf3, average="macro")
+
+print("RF 1")
+print("Validation Accuracy:", rf1_accuracy)
+print("Validation Macro F1:", rf1_f1)
+
+print("\nRF 2")
+print("Validation Accuracy:", rf2_accuracy)
+print("Validation Macro F1:", rf2_f1)
+
+print("\nRF 3")
+print("Validation Accuracy:", rf3_accuracy)
+print("Validation Macro F1:", rf3_f1)
+
+--- Cell 89 (code) ---
+rf_tuning_results = pd.DataFrame({
+    "Configuration": [
+        "100 trees, depth=None, min_split=2",
+        "200 trees, depth=20, min_split=2",
+        "300 trees, depth=30, min_split=5"
+    ],
+    "Validation Accuracy": [
+        rf1_accuracy,
+        rf2_accuracy,
+        rf3_accuracy
+    ],
+    "Validation Macro F1": [
+        rf1_f1,
+        rf2_f1,
+        rf3_f1
+    ]
+})
+
+rf_tuning_results
+
+--- Cell 90 (code) ---
+best_rf = rf_1
+
+--- Cell 91 (code) ---
+y_test_pred_rf = best_rf.predict(X_test_tfidf)
+
+--- Cell 92 (code) ---
+rf_test_accuracy = accuracy_score(y_test, y_test_pred_rf)
+
+print("Random Forest Test Accuracy:", rf_test_accuracy)
+
+--- Cell 93 (code) ---
+rf_test_f1 = f1_score(
+    y_test,
+    y_test_pred_rf,
+    average="macro"
+)
+
+print("Random Forest Test Macro F1:", rf_test_f1)
+
+--- Cell 94 (code) ---
+from sklearn.metrics import classification_report
+
+print(classification_report(
+    y_test,
+    y_test_pred_rf
+))
+
+--- Cell 95 (code) ---
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+cm_rf = confusion_matrix(y_test, y_test_pred_rf)
+
+plt.figure(figsize=(10, 8))
+
+sns.heatmap(
+    cm_rf,
+    annot=True,
+    fmt="d",
+    xticklabels=sorted(y_test.unique()),
+    yticklabels=sorted(y_test.unique())
+)
+
+plt.title("Random Forest - Confusion Matrix")
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.tight_layout()
+plt.show()
+
+--- Cell 96 (markdown) ---
+**NN MODELS**
+
+--- Cell 97 (code) ---
+#SIMPLE RNN PROCESSING
+
+--- Cell 98 (code) ---
+import numpy as np
+import tensorflow as tf
+
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, SimpleRNN, Dense, Dropout
+from tensorflow.keras.callbacks import EarlyStopping
+
+--- Cell 99 (code) ---
+tokenizer = Tokenizer(
+    num_words=None,
+    oov_token="<OOV>"
+)
+
+tokenizer.fit_on_texts(X_train)
+
+--- Cell 100 (code) ---
+vocab_size = len(tokenizer.word_index) + 1
+
+print("Vocabulary size:", vocab_size)
+
+--- Cell 101 (code) ---
+X_train_seq = tokenizer.texts_to_sequences(X_train)
+
+X_val_seq = tokenizer.texts_to_sequences(X_val)
+
+X_test_seq = tokenizer.texts_to_sequences(X_test)
+
+--- Cell 102 (code) ---
+sequence_lengths = [
+    len(seq)
+    for seq in X_train_seq
+]
+
+print("Maximum length:", max(sequence_lengths))
+print("Average length:", np.mean(sequence_lengths))
+print("Median length:", np.median(sequence_lengths))
+
+--- Cell 103 (code) ---
+MAX_LEN = 600
+
+X_train_seq = pad_sequences(
+    X_train_seq,
+    maxlen=MAX_LEN,
+    padding="post",
+    truncating="post"
+)
+
+X_val_seq = pad_sequences(
+    X_val_seq,
+    maxlen=MAX_LEN,
+    padding="post",
+    truncating="post"
+)
+
+X_test_seq = pad_sequences(
+    X_test_seq,
+    maxlen=MAX_LEN,
+    padding="post",
+    truncating="post"
+)
+
+--- Cell 104 (code) ---
+print(X_train_seq.shape)
+print(X_val_seq.shape)
+print(X_test_seq.shape)
+
+--- Cell 105 (code) ---
+from sklearn.preprocessing import LabelEncoder
+
+label_encoder = LabelEncoder()
+
+y_train_encoded = label_encoder.fit_transform(y_train)
+y_val_encoded = label_encoder.transform(y_val)
+y_test_encoded = label_encoder.transform(y_test)
+
+num_classes = len(label_encoder.classes_)
+
+--- Cell 106 (code) ---
+num_classes = len(label_encoder.classes_)
+
+print("Number of classes:", num_classes)
+print("Classes:", label_encoder.classes_)
+
+--- Cell 107 (code) ---
+import numpy as np
+
+embedding_dim = 200
+
+embedding_matrix = np.zeros(
+    (vocab_size, embedding_dim),
+    dtype=np.float32
+)
+
+for word, index in tokenizer.word_index.items():
+
+    if index >= vocab_size:
+        continue
+
+    if word in word2vec_model.wv:
+        embedding_matrix[index] = word2vec_model.wv[word]
+
+--- Cell 108 (code) ---
+print("Embedding dimension:", embedding_dim)
+print("Embedding matrix shape:", embedding_matrix.shape)
+print("Word2Vec vector shape:", word2vec_model.wv["court"].shape)
+
+--- Cell 109 (code) ---
+early_stopping = EarlyStopping(
+    monitor="val_loss",
+    patience=2,
+    restore_best_weights=True
+)
+
+--- Cell 110 (markdown) ---
+SIMPLERNN CODES
+
+--- Cell 111 (code) ---
+import tensorflow as tf
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, SimpleRNN, Dense, Dropout
+from tensorflow.keras.callbacks import EarlyStopping
+
+--- Cell 112 (code) ---
+import tensorflow as tf
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, SimpleRNN, Dense, Dropout
+from tensorflow.keras.callbacks import EarlyStopping
+
+rnn_1 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=True
+    ),
+
+    SimpleRNN(128),
+    Dropout(0.4),
+
+    Dense(128, activation="relu"),
+    Dropout(0.3),
+
+    Dense(64, activation="relu"),
+    Dropout(0.2),
+
+    Dense(num_classes, activation="softmax")
+])
+
+rnn_1.compile(
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.0005),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+early_stopping_rnn_1 = EarlyStopping(
+    monitor="val_loss",
+    patience=3,
+    restore_best_weights=True
+)
+
+history_rnn_1 = rnn_1.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=15,
+    batch_size=64,
+    callbacks=[early_stopping_rnn_1]
+)
+
+--- Cell 113 (code) ---
+rnn_2 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=True
+    ),
+
+    SimpleRNN(256),
+    Dropout(0.4),
+
+    Dense(256, activation="relu"),
+    Dropout(0.35),
+
+    Dense(128, activation="relu"),
+    Dropout(0.3),
+
+    Dense(64, activation="relu"),
+    Dropout(0.2),
+
+    Dense(num_classes, activation="softmax")
+])
+
+rnn_2.compile(
+    optimizer=tf.keras.optimizers.Adam(
+        learning_rate=0.0003
+    ),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+early_stopping_rnn_2 = EarlyStopping(
+    monitor="val_loss",
+    patience=4,
+    restore_best_weights=True
+)
+
+history_rnn_2 = rnn_2.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=25,
+    batch_size=32,
+    callbacks=[early_stopping_rnn_2]
+)
+
+--- Cell 114 (code) ---
+rnn_3 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=True
+    ),
+
+    SimpleRNN(64),
+    Dropout(0.4),
+
+    Dense(64, activation="relu"),
+    Dropout(0.3),
+
+    Dense(num_classes, activation="softmax")
+])
+
+rnn_3.compile(
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.0005),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+early_stopping_rnn_3 = EarlyStopping(
+    monitor="val_loss",
+    patience=3,
+    restore_best_weights=True
+)
+
+history_rnn_3 = rnn_3.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=15,
+    batch_size=32,
+    callbacks=[early_stopping_rnn_3]
+)
+
+--- Cell 115 (code) ---
+
+
+--- Cell 116 (code) ---
+
+
+--- Cell 117 (code) ---
+rnn_4 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=True
+    ),
+
+    SimpleRNN(128),
+    Dropout(0.5),
+
+    Dense(128, activation="relu"),
+    Dropout(0.4),
+
+    Dense(64, activation="relu"),
+    Dropout(0.3),
+
+    Dense(num_classes, activation="softmax")
+])
+
+rnn_4.compile(
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.0003),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+early_stopping_rnn_4 = EarlyStopping(
+    monitor="val_loss",
+    patience=4,
+    restore_best_weights=True
+)
+
+history_rnn_4 = rnn_4.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=20,
+    batch_size=64,
+    callbacks=[early_stopping_rnn_4]
+)
+
+--- Cell 118 (code) ---
+from sklearn.metrics import accuracy_score, f1_score
+
+rnn_1_pred = np.argmax(
+    rnn_1.predict(X_val_seq),
+    axis=1
+)
+
+rnn_2_pred = np.argmax(
+    rnn_2.predict(X_val_seq),
+    axis=1
+)
+
+rnn_3_pred = np.argmax(
+    rnn_3.predict(X_val_seq),
+    axis=1
+)
+rnn_4_pred = np.argmax(
+    rnn_4.predict(X_val_seq),
+    axis=1
+)
+
+print("RNN 1")
+print("Accuracy:", accuracy_score(y_val_encoded, rnn_1_pred))
+print("Macro F1:", f1_score(y_val_encoded, rnn_1_pred, average="macro"))
+
+print("\nRNN 2")
+print("Accuracy:", accuracy_score(y_val_encoded, rnn_2_pred))
+print("Macro F1:", f1_score(y_val_encoded, rnn_2_pred, average="macro"))
+
+print("\nRNN 3")
+print("Accuracy:", accuracy_score(y_val_encoded, rnn_3_pred))
+print("Macro F1:", f1_score(y_val_encoded, rnn_3_pred, average="macro"))
+
+print("\nRNN 4")
+print("Accuracy:", accuracy_score(y_val_encoded, rnn_4_pred))
+print("Macro F1:", f1_score(y_val_encoded, rnn_4_pred, average="macro"))
+
+--- Cell 119 (code) ---
+rnn_results = {
+    "RNN_1": f1_score(y_val_encoded, rnn_1_pred, average="macro"),
+    "RNN_2": f1_score(y_val_encoded, rnn_2_pred, average="macro"),
+    "RNN_3": f1_score(y_val_encoded, rnn_3_pred, average="macro"),
+    "RNN_4": f1_score(y_val_encoded, rnn_4_pred, average="macro")
+}
+
+print(rnn_results)
+
+--- Cell 120 (code) ---
+import numpy as np
+from sklearn.metrics import accuracy_score, f1_score
+
+# Generate validation predictions
+y_val_pred_rnn1 = np.argmax(rnn_1.predict(X_val_seq), axis=1)
+y_val_pred_rnn2 = np.argmax(rnn_2.predict(X_val_seq), axis=1)
+y_val_pred_rnn3 = np.argmax(rnn_3.predict(X_val_seq), axis=1)
+y_val_pred_rnn4 = np.argmax(rnn_4.predict(X_val_seq), axis=1)
+
+# Calculate metrics
+rnn1_accuracy = accuracy_score(y_val_encoded, y_val_pred_rnn1)
+rnn1_f1 = f1_score(y_val_encoded, y_val_pred_rnn1, average="macro")
+
+rnn2_accuracy = accuracy_score(y_val_encoded, y_val_pred_rnn2)
+rnn2_f1 = f1_score(y_val_encoded, y_val_pred_rnn2, average="macro")
+
+rnn3_accuracy = accuracy_score(y_val_encoded, y_val_pred_rnn3)
+rnn3_f1 = f1_score(y_val_encoded, y_val_pred_rnn3, average="macro")
+
+rnn4_accuracy = accuracy_score(y_val_encoded, y_val_pred_rnn4)
+rnn4_f1 = f1_score(y_val_encoded, y_val_pred_rnn4, average="macro")
+
+# Print results
+print("SimpleRNN 1 - Accuracy:", rnn1_accuracy, "Macro F1:", rnn1_f1)
+print("SimpleRNN 2 - Accuracy:", rnn2_accuracy, "Macro F1:", rnn2_f1)
+print("SimpleRNN 3 - Accuracy:", rnn3_accuracy, "Macro F1:", rnn3_f1)
+print("SimpleRNN 4 - Accuracy:", rnn4_accuracy, "Macro F1:", rnn4_f1)
+
+--- Cell 121 (code) ---
+rnn_tuning_results = pd.DataFrame({
+    "Configuration": [
+        "64 units, dropout=0.2",
+        "128 units, dropout=0.3",
+        "128 units, dropout=0.5"
+    ],
+    "Validation Accuracy": [
+        rnn1_accuracy,
+        rnn2_accuracy,
+        rnn3_accuracy
+    ],
+    "Validation Macro F1": [
+        rnn1_f1,
+        rnn2_f1,
+        rnn3_f1
+    ]
+})
+
+rnn_tuning_results
+
+--- Cell 122 (code) ---
+best_rnn = rnn_3
+
+--- Cell 123 (code) ---
+y_test_pred_rnn = np.argmax(
+    best_rnn.predict(X_test_seq),
+    axis=1
+)
+
+--- Cell 124 (code) ---
+from sklearn.metrics import classification_report
+
+print(classification_report(
+    y_test_encoded,
+    y_test_pred_rnn,
+    target_names=label_encoder.classes_
+))
+
+--- Cell 125 (code) ---
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+cm_rnn = confusion_matrix(
+    y_test_encoded,
+    y_test_pred_rnn
+)
+
+plt.figure(figsize=(10, 8))
+
+sns.heatmap(
+    cm_rnn,
+    annot=True,
+    fmt="d",
+    xticklabels=label_encoder.classes_,
+    yticklabels=label_encoder.classes_
+)
+
+plt.title("SimpleRNN - Confusion Matrix")
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.tight_layout()
+plt.show()
+
+--- Cell 126 (markdown) ---
+BIDIRECTIONAL SIMPLERNN
+
+--- Cell 127 (code) ---
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, SimpleRNN, Dense, Dropout, Bidirectional
+
+birnn_1 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=True
+    ),
+
+    Bidirectional(
+        SimpleRNN(64)
+    ),
+
+    Dropout(0.4),
+
+    Dense(
+        64,
+        activation="relu"
+    ),
+
+    Dropout(0.3),
+
+    Dense(
+        num_classes,
+        activation="softmax"
+    )
+])
+
+birnn_1.compile(
+    optimizer=tf.keras.optimizers.Adam(
+        learning_rate=0.0005
+    ),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+early_stopping_birnn_1 = EarlyStopping(
+    monitor="val_loss",
+    patience=3,
+    restore_best_weights=True
+)
+
+history_birnn_1 = birnn_1.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=15,
+    batch_size=32,
+    callbacks=[early_stopping_birnn_2]
+)
+
+--- Cell 128 (code) ---
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, SimpleRNN, Dense, Dropout, Bidirectional
+from tensorflow.keras.callbacks import EarlyStopping
+import tensorflow as tf
+
+birnn_2 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=True
+    ),
+
+    Bidirectional(
+        SimpleRNN(128)
+    ),
+
+    Dropout(0.5),
+
+    Dense(128, activation="relu"),
+    Dropout(0.4),
+
+    Dense(64, activation="relu"),
+    Dropout(0.3),
+
+    Dense(32, activation="relu"),
+    Dropout(0.2),
+
+    Dense(num_classes, activation="softmax")
+])
+
+birnn_2.compile(
+    optimizer=tf.keras.optimizers.Adam(
+        learning_rate=0.0003
+    ),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+early_stopping_birnn_2 = EarlyStopping(
+    monitor="val_loss",
+    patience=4,
+    restore_best_weights=True
+)
+
+history_birnn_2 = birnn_1.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=20,
+    batch_size=32,
+    callbacks=[early_stopping_birnn_1]
+)
+
+--- Cell 129 (code) ---
+birnn_3 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=True
+    ),
+
+    Bidirectional(
+        SimpleRNN(256)
+    ),
+
+    Dropout(0.5),
+
+    Dense(
+        128,
+        activation="relu"
+    ),
+
+    Dropout(0.4),
+
+    Dense(
+        64,
+        activation="relu"
+    ),
+
+    Dropout(0.3),
+
+    Dense(
+        num_classes,
+        activation="softmax"
+    )
+])
+
+birnn_3.compile(
+    optimizer=tf.keras.optimizers.Adam(
+        learning_rate=0.0006
+    ),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+early_stopping_birnn_3 = EarlyStopping(
+    monitor="val_loss",
+    patience=4,
+    restore_best_weights=True
+)
+
+history_birnn_3 = birnn_3.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=20,
+    batch_size=32,
+    callbacks=[early_stopping_birnn_3]
+)
+
+--- Cell 130 (code) ---
+y_val_pred_birnn1 = np.argmax(
+    birnn_1.predict(X_val_seq),
+    axis=1
+)
+
+y_val_pred_birnn2 = np.argmax(
+    birnn_2.predict(X_val_seq),
+    axis=1
+)
+
+y_val_pred_birnn3 = np.argmax(
+    birnn_3.predict(X_val_seq),
+    axis=1
+)
+
+--- Cell 131 (code) ---
+from sklearn.metrics import accuracy_score, f1_score
+
+birnn1_accuracy = accuracy_score(y_val_encoded, y_val_pred_birnn1)
+birnn1_f1 = f1_score(y_val_encoded, y_val_pred_birnn1, average="macro")
+
+birnn2_accuracy = accuracy_score(y_val_encoded, y_val_pred_birnn2)
+birnn2_f1 = f1_score(y_val_encoded, y_val_pred_birnn2, average="macro")
+
+birnn3_accuracy = accuracy_score(y_val_encoded, y_val_pred_birnn3)
+birnn3_f1 = f1_score(y_val_encoded, y_val_pred_birnn3, average="macro")
+
+print("Bi-SimpleRNN 1 - Accuracy:", birnn1_accuracy, "Macro F1:", birnn1_f1)
+print("Bi-SimpleRNN 2 - Accuracy:", birnn2_accuracy, "Macro F1:", birnn2_f1)
+print("Bi-SimpleRNN 3 - Accuracy:", birnn3_accuracy, "Macro F1:", birnn3_f1)
+
+--- Cell 132 (code) ---
+birnn_tuning_results = pd.DataFrame({
+    "Configuration": [
+        "64 units, dropout=0.2",
+        "128 units, dropout=0.3",
+        "128 units, dropout=0.5"
+    ],
+    "Validation Accuracy": [
+        birnn1_accuracy,
+        birnn2_accuracy,
+        birnn3_accuracy
+    ],
+    "Validation Macro F1": [
+        birnn1_f1,
+        birnn2_f1,
+        birnn3_f1
+    ]
+})
+
+birnn_tuning_results
+
+--- Cell 133 (code) ---
+best_birnn = birnn_1
+
+--- Cell 134 (code) ---
+y_test_pred_birnn = np.argmax(
+    best_birnn.predict(X_test_seq),
+    axis=1
+)
+
+--- Cell 135 (code) ---
+birnn_test_accuracy = accuracy_score(
+    y_test_encoded,
+    y_test_pred_birnn
+)
+
+birnn_test_f1 = f1_score(
+    y_test_encoded,
+    y_test_pred_birnn,
+    average="macro"
+)
+
+print("Bidirectional SimpleRNN Test Accuracy:", birnn_test_accuracy)
+print("Bidirectional SimpleRNN Test Macro F1:", birnn_test_f1)
+
+--- Cell 136 (code) ---
+from sklearn.metrics import classification_report
+
+print(classification_report(
+    y_test_encoded,
+    y_test_pred_birnn,
+    target_names=label_encoder.classes_
+))
+
+--- Cell 137 (code) ---
+cm_birnn = confusion_matrix(
+    y_test_encoded,
+    y_test_pred_birnn
+)
+
+plt.figure(figsize=(10, 8))
+
+sns.heatmap(
+    cm_birnn,
+    annot=True,
+    fmt="d",
+    xticklabels=label_encoder.classes_,
+    yticklabels=label_encoder.classes_
+)
+
+plt.title("Bidirectional SimpleRNN - Confusion Matrix")
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.tight_layout()
+plt.show()
+
+--- Cell 138 (markdown) ---
+GRU
+
+--- Cell 139 (code) ---
+from sklearn.utils.class_weight import compute_class_weight
+import numpy as np
+
+class_weights = compute_class_weight(
+    class_weight="balanced",
+    classes=np.unique(y_train_encoded),
+    y=y_train_encoded
+)
+
+class_weight_dict = dict(
+    zip(np.unique(y_train_encoded), class_weights)
+)
+
+print(class_weight_dict)
+
+--- Cell 140 (code) ---
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, GRU, Dense, Dropout
+
+gru_1 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=True
+    ),
+
+    GRU(64),
+    Dropout(0.3),
+
+    Dense(num_classes, activation="softmax")
+])
+
+gru_1.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+history_gru_1 = gru_1.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=10,
+    batch_size=64,
+    callbacks=[early_stopping],
+
+)
+
+--- Cell 141 (code) ---
+gru_2 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=True
+    ),
+
+    GRU(128),
+    Dropout(0.3),
+
+    Dense(64, activation="relu"),
+    Dropout(0.3),
+
+    Dense(num_classes, activation="softmax")
+])
+
+gru_2.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+history_gru_2 = gru_2.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=10,
+    batch_size=64,
+    callbacks=[early_stopping_birnn_3],
+)
+
+--- Cell 142 (code) ---
+gru_3 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=True
+    ),
+
+    GRU(256),
+    Dropout(0.5),
+
+    Dense(64, activation="relu"),
+    Dropout(0.2),
+
+    Dense(num_classes, activation="softmax")
+])
+
+gru_3.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+history_gru_3 = gru_3.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=5,
+    batch_size=64,
+    callbacks=[early_stopping_birnn_3],
+)
+
+--- Cell 143 (code) ---
+import numpy as np
+from sklearn.metrics import accuracy_score, f1_score
+
+y_val_pred_gru1 = np.argmax(
+    gru_1.predict(X_val_seq),
+    axis=1
+)
+
+y_val_pred_gru2 = np.argmax(
+    gru_2.predict(X_val_seq),
+    axis=1
+)
+
+y_val_pred_gru3 = np.argmax(
+    gru_3.predict(X_val_seq),
+    axis=1
+)
+
+--- Cell 144 (code) ---
+gru1_accuracy = accuracy_score(y_val_encoded, y_val_pred_gru1)
+gru1_f1 = f1_score(y_val_encoded, y_val_pred_gru1, average="macro")
+
+gru2_accuracy = accuracy_score(y_val_encoded, y_val_pred_gru2)
+gru2_f1 = f1_score(y_val_encoded, y_val_pred_gru2, average="macro")
+
+gru3_accuracy = accuracy_score(y_val_encoded, y_val_pred_gru3)
+gru3_f1 = f1_score(y_val_encoded, y_val_pred_gru3, average="macro")
+
+print("GRU 1 - Accuracy:", gru1_accuracy, "Macro F1:", gru1_f1)
+print("GRU 2 - Accuracy:", gru2_accuracy, "Macro F1:", gru2_f1)
+print("GRU 3 - Accuracy:", gru3_accuracy, "Macro F1:", gru3_f1)
+
+--- Cell 145 (code) ---
+gru_tuning_results = pd.DataFrame({
+    "Configuration": [
+        "64 units, dropout=0.2",
+        "128 units, dropout=0.3",
+        "128 units, dropout=0.5"
+    ],
+    "Validation Accuracy": [
+        gru1_accuracy,
+        gru2_accuracy,
+        gru3_accuracy
+    ],
+    "Validation Macro F1": [
+        gru1_f1,
+        gru2_f1,
+        gru3_f1
+    ]
+})
+
+gru_tuning_results
+
+--- Cell 146 (code) ---
+best_gru = gru_2
+
+--- Cell 147 (code) ---
+y_test_pred_gru = np.argmax(
+    best_gru.predict(X_test_seq),
+    axis=1
+)
+
+--- Cell 148 (code) ---
+gru_test_accuracy = accuracy_score(
+    y_test_encoded,
+    y_test_pred_gru
+)
+
+gru_test_f1 = f1_score(
+    y_test_encoded,
+    y_test_pred_gru,
+    average="macro"
+)
+
+print("GRU Test Accuracy:", gru_test_accuracy)
+print("GRU Test Macro F1:", gru_test_f1)
+
+--- Cell 149 (code) ---
+from sklearn.metrics import classification_report
+
+print(classification_report(
+    y_test_encoded,
+    y_test_pred_gru,
+    target_names=label_encoder.classes_
+))
+
+--- Cell 150 (code) ---
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+cm_gru = confusion_matrix(
+    y_test_encoded,
+    y_test_pred_gru
+)
+
+plt.figure(figsize=(10, 8))
+
+sns.heatmap(
+    cm_gru,
+    annot=True,
+    fmt="d",
+    xticklabels=label_encoder.classes_,
+    yticklabels=label_encoder.classes_
+)
+
+plt.title("GRU - Confusion Matrix")
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.tight_layout()
+plt.show()
+
+--- Cell 151 (markdown) ---
+BIDIRECTIONAL GRU
+
+--- Cell 152 (code) ---
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, GRU, Dense, Dropout, Bidirectional
+
+bigru_1 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=False
+    ),
+
+    Bidirectional(GRU(64)),
+    Dropout(0.2),
+
+    Dense(num_classes, activation="softmax")
+])
+
+bigru_1.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+bigru_1.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=10,
+    batch_size=64,
+    callbacks=[early_stopping],
+
+)
+
+--- Cell 153 (code) ---
+bigru_2 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=False
+    ),
+
+    Bidirectional(GRU(128)),
+    Dropout(0.6),
+
+    Dense(64, activation="relu"),
+    Dropout(0.5),
+
+    Dense(32, activation="relu"),
+    Dropout(0.5),
+
+    Dense(num_classes, activation="softmax")
+])
+
+bigru_2.compile(
+    optimizer=tf.keras.optimizers.RMSprop(
+        learning_rate=0.0005
+    ),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+bigru_2.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=15,
+    batch_size=64,
+    callbacks=[early_stopping_birnn_3]
+)
+
+--- Cell 154 (code) ---
+bigru_3 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=False
+    ),
+
+    Bidirectional(GRU(256)),
+    Dropout(0.5),
+
+    Dense(num_classes, activation="softmax")
+])
+
+bigru_3.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+bigru_3.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=15,
+    batch_size=64,
+    callbacks=[early_stopping_birnn_3],
+
+)
+
+--- Cell 155 (code) ---
+import numpy as np
+from sklearn.metrics import accuracy_score, f1_score
+
+y_val_pred_bigru1 = np.argmax(
+    bigru_1.predict(X_val_seq),
+    axis=1
+)
+
+y_val_pred_bigru2 = np.argmax(
+    bigru_2.predict(X_val_seq),
+    axis=1
+)
+
+y_val_pred_bigru3 = np.argmax(
+    bigru_3.predict(X_val_seq),
+    axis=1
+)
+
+bigru1_accuracy = accuracy_score(y_val_encoded, y_val_pred_bigru1)
+bigru1_f1 = f1_score(
+    y_val_encoded,
+    y_val_pred_bigru1,
+    average="macro"
+)
+
+bigru2_accuracy = accuracy_score(y_val_encoded, y_val_pred_bigru2)
+bigru2_f1 = f1_score(
+    y_val_encoded,
+    y_val_pred_bigru2,
+    average="macro"
+)
+
+bigru3_accuracy = accuracy_score(y_val_encoded, y_val_pred_bigru3)
+bigru3_f1 = f1_score(
+    y_val_encoded,
+    y_val_pred_bigru3,
+    average="macro"
+)
+
+print("BiGRU 1 - Accuracy:", bigru1_accuracy, "Macro F1:", bigru1_f1)
+print("BiGRU 2 - Accuracy:", bigru2_accuracy, "Macro F1:", bigru2_f1)
+print("BiGRU 3 - Accuracy:", bigru3_accuracy, "Macro F1:", bigru3_f1)
+
+--- Cell 156 (code) ---
+bigru_tuning_results = pd.DataFrame({
+    "Configuration": [
+        "64 units, dropout=0.2",
+        "128 units, dropout=0.3",
+        "128 units, dropout=0.5"
+    ],
+    "Validation Accuracy": [
+        bigru1_accuracy,
+        bigru2_accuracy,
+        bigru3_accuracy
+    ],
+    "Validation Macro F1": [
+        bigru1_f1,
+        bigru2_f1,
+        bigru3_f1
+    ]
+})
+
+bigru_tuning_results
+
+--- Cell 157 (code) ---
+best_bigru = bigru_3
+
+--- Cell 158 (code) ---
+y_test_pred_bigru = np.argmax(
+    best_bigru.predict(X_test_seq),
+    axis=1
+)
+
+--- Cell 159 (code) ---
+bigru_test_accuracy = accuracy_score(
+    y_test_encoded,
+    y_test_pred_bigru
+)
+
+bigru_test_f1 = f1_score(
+    y_test_encoded,
+    y_test_pred_bigru,
+    average="macro"
+)
+
+print("Bidirectional GRU Test Accuracy:", bigru_test_accuracy)
+print("Bidirectional GRU Test Macro F1:", bigru_test_f1)
+
+--- Cell 160 (code) ---
+from sklearn.metrics import classification_report
+
+print(classification_report(
+    y_test_encoded,
+    y_test_pred_bigru,
+    target_names=label_encoder.classes_
+))
+
+--- Cell 161 (code) ---
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+cm_bigru = confusion_matrix(
+    y_test_encoded,
+    y_test_pred_bigru
+)
+
+plt.figure(figsize=(10, 8))
+
+sns.heatmap(
+    cm_bigru,
+    annot=True,
+    fmt="d",
+    xticklabels=label_encoder.classes_,
+    yticklabels=label_encoder.classes_
+)
+
+plt.title("Bidirectional GRU - Confusion Matrix")
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.tight_layout()
+plt.show()
+
+--- Cell 162 (markdown) ---
+**LSTM**
+
+--- Cell 163 (code) ---
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout
+
+lstm_1 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=False
+    ),
+
+    LSTM(64),
+    Dropout(0.2),
+
+    Dense(num_classes, activation="softmax")
+])
+
+lstm_1.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+lstm_1.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=10,
+    batch_size=64,
+    callbacks=[early_stopping]
+)
+
+--- Cell 164 (code) ---
+lstm_2 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=False
+    ),
+
+    LSTM(128),
+    Dropout(0.5),
+
+    Dense(num_classes, activation="softmax")
+])
+
+lstm_2.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+lstm_2.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=16,
+    batch_size=64,
+    callbacks=[early_stopping_birnn_3]
+)
+
+--- Cell 165 (code) ---
+lstm_3 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=False
+    ),
+
+    LSTM(256),
+    Dropout(0.5),
+
+    Dense(128, activation="relu"),
+    Dropout(0.4),
+
+    Dense(num_classes, activation="softmax")
+])
+
+lstm_3.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+lstm_3.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=10,
+    batch_size=64,
+    callbacks=[early_stopping_birnn_2]
+)
+
+--- Cell 166 (code) ---
+import numpy as np
+from sklearn.metrics import accuracy_score, f1_score
+
+y_val_pred_lstm1 = np.argmax(
+    lstm_1.predict(X_val_seq),
+    axis=1
+)
+
+y_val_pred_lstm2 = np.argmax(
+    lstm_2.predict(X_val_seq),
+    axis=1
+)
+
+y_val_pred_lstm3 = np.argmax(
+    lstm_3.predict(X_val_seq),
+    axis=1
+)
+
+lstm1_accuracy = accuracy_score(y_val_encoded, y_val_pred_lstm1)
+lstm1_f1 = f1_score(
+    y_val_encoded,
+    y_val_pred_lstm1,
+    average="macro"
+)
+
+lstm2_accuracy = accuracy_score(y_val_encoded, y_val_pred_lstm2)
+lstm2_f1 = f1_score(
+    y_val_encoded,
+    y_val_pred_lstm2,
+    average="macro"
+)
+
+lstm3_accuracy = accuracy_score(y_val_encoded, y_val_pred_lstm3)
+lstm3_f1 = f1_score(
+    y_val_encoded,
+    y_val_pred_lstm3,
+    average="macro"
+)
+
+print("LSTM 1 - Accuracy:", lstm1_accuracy, "Macro F1:", lstm1_f1)
+print("LSTM 2 - Accuracy:", lstm2_accuracy, "Macro F1:", lstm2_f1)
+print("LSTM 3 - Accuracy:", lstm3_accuracy, "Macro F1:", lstm3_f1)
+
+--- Cell 167 (code) ---
+lstm_tuning_results = pd.DataFrame({
+    "Configuration": [
+        "64 units, dropout=0.2",
+        "128 units, dropout=0.3",
+        "128 units, dropout=0.5"
+    ],
+    "Validation Accuracy": [
+        lstm1_accuracy,
+        lstm2_accuracy,
+        lstm3_accuracy
+    ],
+    "Validation Macro F1": [
+        lstm1_f1,
+        lstm2_f1,
+        lstm3_f1
+    ]
+})
+
+lstm_tuning_results
+
+--- Cell 168 (code) ---
+best_lstm = lstm_2
+
+--- Cell 169 (code) ---
+y_test_pred_lstm = np.argmax(
+    best_lstm.predict(X_test_seq),
+    axis=1
+)
+
+--- Cell 170 (code) ---
+lstm_test_accuracy = accuracy_score(
+    y_test_encoded,
+    y_test_pred_lstm
+)
+
+lstm_test_f1 = f1_score(
+    y_test_encoded,
+    y_test_pred_lstm,
+    average="macro"
+)
+
+print("LSTM Test Accuracy:", lstm_test_accuracy)
+print("LSTM Test Macro F1:", lstm_test_f1)
+
+--- Cell 171 (code) ---
+from sklearn.metrics import classification_report
+
+print(classification_report(
+    y_test_encoded,
+    y_test_pred_lstm,
+    target_names=label_encoder.classes_
+))
+
+--- Cell 172 (code) ---
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+cm_lstm = confusion_matrix(
+    y_test_encoded,
+    y_test_pred_lstm
+)
+
+plt.figure(figsize=(10, 8))
+
+sns.heatmap(
+    cm_lstm,
+    annot=True,
+    fmt="d",
+    xticklabels=label_encoder.classes_,
+    yticklabels=label_encoder.classes_
+)
+
+plt.title("LSTM - Confusion Matrix")
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.tight_layout()
+plt.show()
+
+--- Cell 173 (markdown) ---
+BIDIRECTIONAL LSTM
+
+--- Cell 174 (code) ---
+bilstm_1 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=False
+    ),
+
+    Bidirectional(LSTM(64)),
+    Dropout(0.2),
+
+    Dense(64, activation="relu"),
+    Dropout(0.2),
+
+    Dense(num_classes, activation="softmax")
+])
+
+bilstm_1.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+bilstm_1.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=10,
+    batch_size=64,
+    callbacks=[early_stopping_birnn_3]
+)
+
+--- Cell 175 (code) ---
+bilstm_2 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=False
+    ),
+
+    Bidirectional(LSTM(128)),
+    Dropout(0.5),
+
+    Dense(num_classes, activation="softmax")
+])
+
+bilstm_2.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+bilstm_2.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=12,
+    batch_size=64,
+    callbacks=[early_stopping]
+)
+
+--- Cell 176 (code) ---
+bilstm_3 = Sequential([
+    Embedding(
+        input_dim=vocab_size,
+        output_dim=embedding_dim,
+        weights=[embedding_matrix],
+        trainable=False
+    ),
+
+    Bidirectional(LSTM(256)),
+    Dropout(0.45),
+
+    Dense(128, activation="relu"),
+    Dropout(0.3),
+
+    Dense(num_classes, activation="softmax")
+])
+
+bilstm_3.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+bilstm_3.fit(
+    X_train_seq,
+    y_train_encoded,
+    validation_data=(X_val_seq, y_val_encoded),
+    epochs=15,
+    batch_size=64,
+    callbacks=[early_stopping_birnn_3]
+)
+
+--- Cell 177 (code) ---
+import numpy as np
+from sklearn.metrics import accuracy_score, f1_score
+
+y_val_pred_bilstm1 = np.argmax(
+    bilstm_1.predict(X_val_seq),
+    axis=1
+)
+
+y_val_pred_bilstm2 = np.argmax(
+    bilstm_2.predict(X_val_seq),
+    axis=1
+)
+
+y_val_pred_bilstm3 = np.argmax(
+    bilstm_3.predict(X_val_seq),
+    axis=1
+)
+
+bilstm1_accuracy = accuracy_score(
+    y_val_encoded,
+    y_val_pred_bilstm1
+)
+
+bilstm1_f1 = f1_score(
+    y_val_encoded,
+    y_val_pred_bilstm1,
+    average="macro"
+)
+
+bilstm2_accuracy = accuracy_score(
+    y_val_encoded,
+    y_val_pred_bilstm2
+)
+
+bilstm2_f1 = f1_score(
+    y_val_encoded,
+    y_val_pred_bilstm2,
+    average="macro"
+)
+
+bilstm3_accuracy = accuracy_score(
+    y_val_encoded,
+    y_val_pred_bilstm3
+)
+
+bilstm3_f1 = f1_score(
+    y_val_encoded,
+    y_val_pred_bilstm3,
+    average="macro"
+)
+
+print(
+    "BiLSTM 1 - Accuracy:", bilstm1_accuracy,
+    "Macro F1:", bilstm1_f1
+)
+
+print(
+    "BiLSTM 2 - Accuracy:", bilstm2_accuracy,
+    "Macro F1:", bilstm2_f1
+)
+
+print(
+    "BiLSTM 3 - Accuracy:", bilstm3_accuracy,
+    "Macro F1:", bilstm3_f1
+)
+
+--- Cell 178 (code) ---
+bilstm_tuning_results = pd.DataFrame({
+    "Configuration": [
+        "64 units, dropout=0.2",
+        "128 units, dropout=0.3",
+        "128 units, dropout=0.5"
+    ],
+    "Validation Accuracy": [
+        bilstm1_accuracy,
+        bilstm2_accuracy,
+        bilstm3_accuracy
+    ],
+    "Validation Macro F1": [
+        bilstm1_f1,
+        bilstm2_f1,
+        bilstm3_f1
+    ]
+})
+
+bilstm_tuning_results
+
+--- Cell 179 (code) ---
+best_bilstm = bilstm_2
+
+--- Cell 180 (code) ---
+y_test_pred_bilstm = np.argmax(
+    best_bilstm.predict(X_test_seq),
+    axis=1
+)
+
+--- Cell 181 (code) ---
+bilstm_test_accuracy = accuracy_score(
+    y_test_encoded,
+    y_test_pred_bilstm
+)
+
+bilstm_test_f1 = f1_score(
+    y_test_encoded,
+    y_test_pred_bilstm,
+    average="macro"
+)
+
+print("Bidirectional LSTM Test Accuracy:", bilstm_test_accuracy)
+print("Bidirectional LSTM Test Macro F1:", bilstm_test_f1)
+
+--- Cell 182 (code) ---
+from sklearn.metrics import classification_report
+
+print(classification_report(
+    y_test_encoded,
+    y_test_pred_bilstm,
+    target_names=label_encoder.classes_
+))
+
+--- Cell 183 (code) ---
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+cm_bilstm = confusion_matrix(
+    y_test_encoded,
+    y_test_pred_bilstm
+)
+
+plt.figure(figsize=(10, 8))
+
+sns.heatmap(
+    cm_bilstm,
+    annot=True,
+    fmt="d",
+    xticklabels=label_encoder.classes_,
+    yticklabels=label_encoder.classes_
+)
+
+plt.title("Bidirectional LSTM - Confusion Matrix")
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.tight_layout()
+plt.show()
+
+--- Cell 184 (markdown) ---
+BERT BASE
+
+--- Cell 185 (code) ---
+from sklearn.preprocessing import LabelEncoder
+import torch
+from torch.utils.data import Dataset, DataLoader
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from torch.optim import AdamW
+from transformers import get_scheduler
+from tqdm.auto import tqdm
+import numpy as np
+from sklearn.metrics import accuracy_score, classification_report
+
+le = LabelEncoder()
+y_train_encoded = le.fit_transform(y_train)
+y_val_encoded = le.transform(y_val)
+y_test_encoded = le.transform(y_test)
+
+--- Cell 186 (code) ---
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+
+class LegalTextDataset(Dataset):
+    def __init__(self, texts, labels, tokenizer, max_length=512):
+        self.encodings = tokenizer(
+            texts.tolist(),
+            truncation=True,
+            padding=True,
+            max_length=max_length
+        )
+        self.labels = labels
+
+    def __getitem__(self, idx):
+        item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
+        item['labels'] = torch.tensor(self.labels[idx])
+        return item
+
+    def __len__(self):
+        return len(self.labels)
+
+train_dataset = LegalTextDataset(X_train, y_train_encoded, tokenizer)
+val_dataset = LegalTextDataset(X_val, y_val_encoded, tokenizer)
+test_dataset = LegalTextDataset(X_test, y_test_encoded, tokenizer)
+
+--- Cell 187 (code) ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+model_bert_2 = AutoModelForSequenceClassification.from_pretrained(
+    "bert-base-uncased",
+    num_labels=len(le.classes_)
+)
+
+model_bert_2.to(device)
+
+train_loader_2 = DataLoader(
+    train_dataset,
+    batch_size=16,
+    shuffle=True
+)
+
+val_loader_2 = DataLoader(
+    val_dataset,
+    batch_size=16
+)
+
+optimizer_2 = AdamW(
+    model_bert_2.parameters(),
+    lr=1e-5,
+    weight_decay=0.01
+)
+
+num_epochs_2 = 3
+
+num_training_steps_2 = (
+    num_epochs_2 * len(train_loader_2)
+)
+
+lr_scheduler_2 = get_scheduler(
+    name="linear",
+    optimizer=optimizer_2,
+    num_warmup_steps=0,
+    num_training_steps=num_training_steps_2
+)
+
+best_val_f1_2 = -1
+best_val_accuracy_2 = 0
+
+for epoch in range(num_epochs_2):
+
+    model_bert_2.train()
+    total_train_loss_2 = 0
+
+    progress_bar = tqdm(
+        train_loader_2,
+        desc=f"Epoch {epoch+1}/{num_epochs_2}"
+    )
+
+    for batch in progress_bar:
+
+        batch = {
+            k: v.to(device)
+            for k, v in batch.items()
+        }
+
+        outputs = model_bert_2(**batch)
+
+        loss = outputs.loss
+        total_train_loss_2 += loss.item()
+
+        loss.backward()
+
+        optimizer_2.step()
+        lr_scheduler_2.step()
+        optimizer_2.zero_grad()
+
+        progress_bar.set_postfix(
+            loss=loss.item()
+        )
+
+
+    model_bert_2.eval()
+
+    val_predictions_2 = []
+    val_true_2 = []
+
+    with torch.no_grad():
+
+        for batch in val_loader_2:
+
+            labels = batch["labels"].to(device)
+
+            batch = {
+                k: v.to(device)
+                for k, v in batch.items()
+            }
+
+            outputs = model_bert_2(**batch)
+
+            predictions = torch.argmax(
+                outputs.logits,
+                dim=-1
+            )
+
+            val_predictions_2.extend(
+                predictions.cpu().numpy()
+            )
+
+            val_true_2.extend(
+                labels.cpu().numpy()
+            )
+
+    val_accuracy_2 = accuracy_score(
+        val_true_2,
+        val_predictions_2
+    )
+
+
+    report_2 = classification_report(
+        val_true_2,
+        val_predictions_2,
+        output_dict=True,
+        zero_division=0
+    )
+
+
+    val_macro_f1_2 = report_2["macro avg"]["f1-score"]
+
+    print(
+        f"Epoch {epoch+1} | "
+        f"Train Loss: {total_train_loss_2 / len(train_loader_2):.4f} | "
+        f"Validation Accuracy: {val_accuracy_2:.4f} | "
+        f"Validation Macro F1: {val_macro_f1_2:.4f}"
+    )
+
+
+    if val_macro_f1_2 > best_val_f1_2:
+
+        best_val_f1_2 = val_macro_f1_2
+        best_val_accuracy_2 = val_accuracy_2
+
+        torch.save(
+            model_bert_2.state_dict(),
+            "best_bert_model_2.pt"
+        )
+
+        print("Best BERT 2 model saved.")
+
+--- Cell 188 (code) ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+model_bert_1 = AutoModelForSequenceClassification.from_pretrained(
+    "bert-base-uncased",
+    num_labels=len(le.classes_)
+)
+
+model_bert_1.to(device)
+
+train_loader = DataLoader(
+    train_dataset,
+    batch_size=8,
+    shuffle=True
+)
+
+val_loader = DataLoader(
+    val_dataset,
+    batch_size=8
+)
+
+optimizer = AdamW(
+    model_bert_1.parameters(),
+    lr=2e-5,
+    weight_decay=0.01
+)
+
+num_epochs = 2
+
+num_training_steps = num_epochs * len(train_loader)
+
+lr_scheduler = get_scheduler(
+    name="linear",
+    optimizer=optimizer,
+    num_warmup_steps=0,
+    num_training_steps=num_training_steps
+)
+
+
+best_val_f1 = -1
+patience = 1
+patience_counter = 0
+
+for epoch in range(num_epochs):
+
+
+
+    model_bert_1.train()
+    total_train_loss = 0
+
+    progress_bar = tqdm(
+        train_loader,
+        desc=f"Epoch {epoch+1}/{num_epochs}"
+    )
+
+    for batch in progress_bar:
+
+        batch = {
+            k: v.to(device)
+            for k, v in batch.items()
+        }
+
+        outputs = model_bert_1(**batch)
+
+        loss = outputs.loss
+        total_train_loss += loss.item()
+
+        loss.backward()
+
+        optimizer.step()
+        lr_scheduler.step()
+        optimizer.zero_grad()
+
+        progress_bar.set_postfix(
+            loss=loss.item()
+        )
+
+
+
+    model_bert_1.eval()
+
+    val_predictions = []
+    val_true = []
+
+    with torch.no_grad():
+
+        for batch in val_loader:
+
+            labels = batch["labels"].to(device)
+
+            batch = {
+                k: v.to(device)
+                for k, v in batch.items()
+            }
+
+            outputs = model_bert_1(**batch)
+
+            predictions = torch.argmax(
+                outputs.logits,
+                dim=-1
+            )
+
+            val_predictions.extend(
+                predictions.cpu().numpy()
+            )
+
+            val_true.extend(
+                labels.cpu().numpy()
+            )
+
+
+    val_accuracy = accuracy_score(
+        val_true,
+        val_predictions
+    )
+
+
+    report = classification_report(
+        val_true,
+        val_predictions,
+        output_dict=True,
+        zero_division=0
+    )
+
+    val_macro_f1 = report["macro avg"]["f1-score"]
+
+    print(
+        f"Epoch {epoch+1} | "
+        f"Train Loss: {total_train_loss / len(train_loader):.4f} | "
+        f"Validation Accuracy: {val_accuracy:.4f} | "
+        f"Validation Macro F1: {val_macro_f1:.4f}"
+    )
+
+
+
+    if val_macro_f1 > best_val_f1:
+
+        best_val_f1 = val_macro_f1
+        patience_counter = 0
+
+        torch.save(
+            model_bert_1.state_dict(),
+            "best_bert_model.pt"
+        )
+
+        print("Best model saved.")
+
+    else:
+
+        patience_counter += 1
+
+        print(
+            f"No improvement. "
+            f"Patience: {patience_counter}/{patience}"
+        )
+
+        if patience_counter >= patience:
+
+            print("Early stopping triggered.")
+            break
+
+--- Cell 189 (code) ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+model_bert_3 = AutoModelForSequenceClassification.from_pretrained(
+    "bert-base-uncased",
+    num_labels=len(le.classes_)
+)
+
+model_bert_3.to(device)
+
+train_loader_3 = DataLoader(
+    train_dataset,
+    batch_size=8,
+    shuffle=True
+)
+
+val_loader_3 = DataLoader(
+    val_dataset,
+    batch_size=8
+)
+
+optimizer_3 = AdamW(
+    model_bert_3.parameters(),
+    lr=3e-5,
+    weight_decay=0.05
+)
+
+num_epochs_3 = 2
+
+num_training_steps_3 = num_epochs_3 * len(train_loader_3)
+
+num_warmup_steps_3 = int(
+    0.1 * num_training_steps_3
+)
+
+lr_scheduler_3 = get_scheduler(
+    name="linear",
+    optimizer=optimizer_3,
+    num_warmup_steps=num_warmup_steps_3,
+    num_training_steps=num_training_steps_3
+)
+
+
+best_val_f1_3 = -1
+patience_3 = 1
+patience_counter_3 = 0
+
+for epoch in range(num_epochs_3):
+
+
+
+    model_bert_3.train()
+    total_train_loss_3 = 0
+
+    progress_bar = tqdm(
+        train_loader_3,
+        desc=f"Epoch {epoch+1}/{num_epochs_3}"
+    )
+
+    for batch in progress_bar:
+
+        batch = {
+            k: v.to(device)
+            for k, v in batch.items()
+        }
+
+        outputs = model_bert_3(**batch)
+
+        loss = outputs.loss
+        total_train_loss_3 += loss.item()
+
+        loss.backward()
+
+
+        torch.nn.utils.clip_grad_norm_(
+            model_bert_3.parameters(),
+            max_norm=1.0
+        )
+
+        optimizer_3.step()
+        lr_scheduler_3.step()
+        optimizer_3.zero_grad()
+
+        progress_bar.set_postfix(
+            loss=loss.item()
+        )
+
+
+
+    model_bert_3.eval()
+
+    val_predictions_3 = []
+    val_true_3 = []
+
+    with torch.no_grad():
+
+        for batch in val_loader_3:
+
+            labels = batch["labels"].to(device)
+
+            batch = {
+                k: v.to(device)
+                for k, v in batch.items()
+            }
+
+            outputs = model_bert_3(**batch)
+
+            predictions = torch.argmax(
+                outputs.logits,
+                dim=-1
+            )
+
+            val_predictions_3.extend(
+                predictions.cpu().numpy()
+            )
+
+            val_true_3.extend(
+                labels.cpu().numpy()
+            )
+
+    val_accuracy_3 = accuracy_score(
+        val_true_3,
+        val_predictions_3
+    )
+
+    report_3 = classification_report(
+        val_true_3,
+        val_predictions_3,
+        output_dict=True,
+        zero_division=0
+    )
+
+    val_macro_f1_3 = report_3["macro avg"]["f1-score"]
+
+    print(
+        f"Epoch {epoch+1} | "
+        f"Train Loss: {total_train_loss_3 / len(train_loader_3):.4f} | "
+        f"Validation Accuracy: {val_accuracy_3:.4f} | "
+        f"Validation Macro F1: {val_macro_f1_3:.4f}"
+    )
+
+
+
+    if val_macro_f1_3 > best_val_f1_3:
+
+        best_val_f1_3 = val_macro_f1_3
+        patience_counter_3 = 0
+
+        torch.save(
+            model_bert_3.state_dict(),
+            "best_bert_model_3.pt"
+        )
+
+        print("Best model saved.")
+
+    else:
+
+        patience_counter_3 += 1
+
+        print(
+            f"No improvement. "
+            f"Patience: {patience_counter_3}/{patience_3}"
+        )
+
+        if patience_counter_3 >= patience_3:
+
+            print("Early stopping triggered.")
+            break
+
+--- Cell 190 (markdown) ---
+TESTING AND REPORTS OF BERT 2
+
+--- Cell 191 (code) ---
+test_loader_2 = DataLoader(
+    test_dataset,
+    batch_size=16
+)
+
+--- Cell 192 (code) ---
+model_bert_2.load_state_dict(
+    torch.load(
+        "best_bert_model_2.pt",
+        map_location=device
+    )
+)
+
+model_bert_2.to(device)
+model_bert_2.eval()
+
+print("Best BERT 2 model loaded.")
+
+--- Cell 193 (code) ---
+test_predictions_2 = []
+test_true_2 = []
+
+with torch.no_grad():
+
+    for batch in test_loader_2:
+
+        labels = batch["labels"].to(device)
+
+        batch = {
+            k: v.to(device)
+            for k, v in batch.items()
+        }
+
+        outputs = model_bert_2(**batch)
+
+        predictions = torch.argmax(
+            outputs.logits,
+            dim=-1
+        )
+
+        test_predictions_2.extend(
+            predictions.cpu().numpy()
+        )
+
+        test_true_2.extend(
+            labels.cpu().numpy()
+        )
+
+--- Cell 194 (code) ---
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    classification_report,
+    confusion_matrix
+)
+
+test_accuracy_2 = accuracy_score(
+    test_true_2,
+    test_predictions_2
+)
+
+test_macro_f1_2 = f1_score(
+    test_true_2,
+    test_predictions_2,
+    average="macro"
+)
+
+test_weighted_f1_2 = f1_score(
+    test_true_2,
+    test_predictions_2,
+    average="weighted"
+)
+
+print(f"BERT 2 Test Accuracy: {test_accuracy_2:.4f}")
+print(f"BERT 2 Test Macro F1: {test_macro_f1_2:.4f}")
+print(f"BERT 2 Test Weighted F1: {test_weighted_f1_2:.4f}")
+
+--- Cell 195 (code) ---
+print("BERT 2 Test Classification Report:\n")
+
+print(
+    classification_report(
+        test_true_2,
+        test_predictions_2,
+        target_names=le.classes_,
+        zero_division=0
+    )
+)
+
+--- Cell 196 (code) ---
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+cm_2 = confusion_matrix(
+    test_true_2,
+    test_predictions_2
+)
+
+plt.figure(figsize=(10, 8))
+
+sns.heatmap(
+    cm_2,
+    annot=True,
+    fmt="d",
+    xticklabels=le.classes_,
+    yticklabels=le.classes_
+)
+
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.title("BERT 2 - Test Confusion Matrix")
+plt.show()
+
+--- Cell 197 (markdown) ---
+**MODEL COMPARISON**
+
+--- Cell 198 (code) ---
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+
+model_results = [
+    {
+        "Model": "Random Forest",
+        "Accuracy": 0.5700,
+        "Precision": 0.6400,
+        "Recall": 0.2400,
+        "Macro F1": 0.2900
+    },
+    {
+      "Model": "Logistic Regression",
+      "Accuracy": 0.6300,
+      "Precision": 0.6300,
+      "Recall": 0.3700,
+      "Macro F1": 0.4300
+    },
+      {
+      "Model": "Naive Bayes",
+      "Accuracy": 0.5700,
+      "Precision": 0.4200,
+      "Recall": 0.3900,
+      "Macro F1": 0.4000
+    },
+    {
+        "Model": "SimpleRNN",
+        "Accuracy": 0.4900,
+        "Precision": 0.0500,
+        "Recall": 0.1000,
+        "Macro F1": 0.0700
+    },
+    {
+        "Model": "GRU",
+        "Accuracy": 0.4900,
+        "Precision": 0.0800,
+        "Recall": 0.1000,
+        "Macro F1": 0.0700
+    },
+    {
+        "Model": "LSTM",
+        "Accuracy": 0.4900,
+        "Precision": 0.0500,
+        "Recall": 0.1000,
+        "Macro F1": 0.0700
+    },
+    {
+        "Model": "Bidirectional SimpleRNN",
+        "Accuracy": 0.4900,
+        "Precision": 0.0500,
+        "Recall": 0.1000,
+        "Macro F1": 0.0700
+    },
+    {
+        "Model": "Bidirectional GRU",
+        "Accuracy": 0.4800,
+        "Precision": 0.2300,
+        "Recall": 0.1600,
+        "Macro F1": 0.1400
+    },
+    {
+        "Model": "BERT BASE",
+        "Accuracy": 0.5100,
+        "Precision": 0.3400,
+        "Recall": 0.2200,
+        "Macro F1": 0.2200
+    },
+    {
+        "Model": "Bidirectional LSTM",
+        "Accuracy": 0.4900,
+        "Precision": 0.2200,
+        "Recall": 0.1900,
+        "Macro F1": 0.1600
+    }
+]
+
+
+comparison_df = pd.DataFrame(model_results)
+
+
+comparison_df = comparison_df.sort_values(
+    by="Macro F1",
+    ascending=False
+).reset_index(drop=True)
+
+display(
+    comparison_df.style.format({
+        "Accuracy": "{:.4f}",
+        "Precision": "{:.4f}",
+        "Recall": "{:.4f}",
+        "Macro F1": "{:.4f}"
+    })
+)
+
+plt.figure(figsize=(12, 7))
+
+sns.barplot(
+    data=comparison_df,
+    x="Macro F1",
+    y="Model",
+    palette="viridis"
+)
+
+plt.title("Comparison of Models by Macro F1 Score")
+plt.xlabel("Macro F1 Score")
+plt.ylabel("Model")
+plt.tight_layout()
+plt.show()

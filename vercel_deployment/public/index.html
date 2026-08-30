@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Outcome Predictor</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface: #1e293b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--surface);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid var(--border);
+            margin: 20px;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #cbd5e1;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.875rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background-color: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .result-box {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 8px;
+            background-color: #0f172a;
+            border: 1px solid var(--border);
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-box h3 {
+            margin-top: 0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .error {
+            color: var(--error);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Legal Case Predictor</h1>
+        <p class="subtitle">Enter the case details to predict the legal outcome (e.g. cited, distinguished).</p>
+
+        <div class="form-group">
+            <label for="caseTitle">Case Title</label>
+            <input type="text" id="caseTitle" placeholder="Enter the title of the case..." required>
+        </div>
+
+        <div class="form-group">
+            <label for="caseText">Case Text</label>
+            <textarea id="caseText" placeholder="e.g. The court relies heavily on the precedent set in the previous ruling. We agree with the plaintiff's interpretation..." required></textarea>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 1.5rem;">
+            <button type="button" onclick="loadExample('cited')" style="background-color: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 0.5rem; font-size: 0.85rem;">Load 'Cited' Example</button>
+            <button type="button" onclick="loadExample('distinguished')" style="background-color: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 0.5rem; font-size: 0.85rem;">Load 'Distinguished' Example</button>
+        </div>
+
+        <button id="predictBtn" onclick="makePrediction()">Predict Outcome</button>
+        <div id="errorMsg" class="error"></div>
+
+        <div id="resultBox" class="result-box">
+            <h3>Predicted Outcome</h3>
+            <p id="predictionValue" class="result-value">-</p>
+        </div>
+    </div>
+
+    <script>
+        function loadExample(type) {
+            if (type === 'cited') {
+                document.getElementById('caseTitle').value = "Smith v. Industrial Corp";
+                document.getElementById('caseText').value = "The court relies heavily on the precedent set in the previous ruling. We agree with the plaintiff's interpretation of the employment contract and cite the relevant statutes that uphold this binding agreement. The principles from the earlier judgment are directly applicable to the facts at hand.";
+            } else if (type === 'distinguished') {
+                document.getElementById('caseTitle').value = "State v. Doe";
+                document.getElementById('caseText').value = "The appellant relies heavily on the precedent established in Jones v. State. However, we find that case to be readily distinguishable from the present matter. Unlike the situation in Jones, the facts of the present case show no such intent. Therefore, the circumstances here are clearly distinguishable on their facts, and the prior ruling does not apply.";
+            }
+            // Clear previous results
+            document.getElementById('resultBox').style.display = 'none';
+            document.getElementById('errorMsg').style.display = 'none';
+        }
+
+        async function makePrediction() {
+            const title = document.getElementById('caseTitle').value.trim();
+            const text = document.getElementById('caseText').value.trim();
+            const btn = document.getElementById('predictBtn');
+            const errorMsg = document.getElementById('errorMsg');
+            const resultBox = document.getElementById('resultBox');
+            const predictionValue = document.getElementById('predictionValue');
+
+            if (!title && !text) {
+                errorMsg.textContent = "Please provide at least some case text or a title.";
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            // UI Loading state
+            btn.disabled = true;
+            btn.textContent = "Analyzing...";
+            errorMsg.style.display = 'none';
+            resultBox.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ case_title: title, case_text: text })
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.detail || "Prediction failed. Server returned an error.");
+                }
+
+                const data = await response.json();
+                
+                // Show result
+                predictionValue.textContent = data.prediction.toUpperCase();
+                resultBox.style.display = 'block';
+                
+            } catch (error) {
+                errorMsg.textContent = error.message;
+                errorMsg.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Predict Outcome";
+            }
+        }
+    </script>
+</body>
+</html>

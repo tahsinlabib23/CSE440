@@ -1,0 +1,186 @@
+--- SOURCE ---
+from sklearn.metrics import accuracy_score, f1_score
+
+accuracy_lr = accuracy_score(y_test, y_test_pred_lr)
+f1_lr = f1_score(y_test, y_test_pred_lr, average="macro")
+
+print("Logistic Regression Test Accuracy:", accuracy_lr)
+print("Logistic Regression Test Macro F1:", f1_lr)
+--- OUTPUT ---
+Logistic Regression Test Accuracy: 0.6251511487303507
+Logistic Regression Test Macro F1: 0.42758948419818477
+
+
+--- SOURCE ---
+from sklearn.metrics import accuracy_score
+
+nb_test_accuracy = accuracy_score(y_test, y_test_pred_nb)
+
+print("Naive Bayes Test Accuracy:", nb_test_accuracy)
+--- OUTPUT ---
+Naive Bayes Test Accuracy: 0.5703345425231762
+
+
+--- SOURCE ---
+from sklearn.metrics import f1_score
+
+nb_test_f1 = f1_score(
+    y_test,
+    y_test_pred_nb,
+    average="macro"
+)
+
+print("Naive Bayes Test Macro F1:", nb_test_f1)
+--- OUTPUT ---
+Naive Bayes Test Macro F1: 0.39527438478955346
+
+
+--- SOURCE ---
+rf_test_accuracy = accuracy_score(y_test, y_test_pred_rf)
+
+print("Random Forest Test Accuracy:", rf_test_accuracy)
+--- OUTPUT ---
+Random Forest Test Accuracy: 0.5727529222087868
+
+
+--- SOURCE ---
+rf_test_f1 = f1_score(
+    y_test,
+    y_test_pred_rf,
+    average="macro"
+)
+
+print("Random Forest Test Macro F1:", rf_test_f1)
+--- OUTPUT ---
+Random Forest Test Macro F1: 0.29262208638762366
+
+
+--- SOURCE ---
+birnn_test_accuracy = accuracy_score(
+    y_test_encoded,
+    y_test_pred_birnn
+)
+
+birnn_test_f1 = f1_score(
+    y_test_encoded,
+    y_test_pred_birnn,
+    average="macro"
+)
+
+print("Bidirectional SimpleRNN Test Accuracy:", birnn_test_accuracy)
+print("Bidirectional SimpleRNN Test Macro F1:", birnn_test_f1)
+--- OUTPUT ---
+Bidirectional SimpleRNN Test Accuracy: 0.48810963321241435
+Bidirectional SimpleRNN Test Macro F1: 0.06560130010834236
+
+
+--- SOURCE ---
+gru_test_accuracy = accuracy_score(
+    y_test_encoded,
+    y_test_pred_gru
+)
+
+gru_test_f1 = f1_score(
+    y_test_encoded,
+    y_test_pred_gru,
+    average="macro"
+)
+
+print("GRU Test Accuracy:", gru_test_accuracy)
+print("GRU Test Macro F1:", gru_test_f1)
+--- OUTPUT ---
+GRU Test Accuracy: 0.4852881902458686
+GRU Test Macro F1: 0.07000838935459522
+
+
+--- SOURCE ---
+bigru_test_accuracy = accuracy_score(
+    y_test_encoded,
+    y_test_pred_bigru
+)
+
+bigru_test_f1 = f1_score(
+    y_test_encoded,
+    y_test_pred_bigru,
+    average="macro"
+)
+
+print("Bidirectional GRU Test Accuracy:", bigru_test_accuracy)
+print("Bidirectional GRU Test Macro F1:", bigru_test_f1)
+--- OUTPUT ---
+Bidirectional GRU Test Accuracy: 0.4840790004030633
+Bidirectional GRU Test Macro F1: 0.14283605271247787
+
+
+--- SOURCE ---
+lstm_test_accuracy = accuracy_score(
+    y_test_encoded,
+    y_test_pred_lstm
+)
+
+lstm_test_f1 = f1_score(
+    y_test_encoded,
+    y_test_pred_lstm,
+    average="macro"
+)
+
+print("LSTM Test Accuracy:", lstm_test_accuracy)
+print("LSTM Test Macro F1:", lstm_test_f1)
+--- OUTPUT ---
+LSTM Test Accuracy: 0.48810963321241435
+LSTM Test Macro F1: 0.06560130010834236
+
+
+--- SOURCE ---
+bilstm_test_accuracy = accuracy_score(
+    y_test_encoded,
+    y_test_pred_bilstm
+)
+
+bilstm_test_f1 = f1_score(
+    y_test_encoded,
+    y_test_pred_bilstm,
+    average="macro"
+)
+
+print("Bidirectional LSTM Test Accuracy:", bilstm_test_accuracy)
+print("Bidirectional LSTM Test Macro F1:", bilstm_test_f1)
+--- OUTPUT ---
+Bidirectional LSTM Test Accuracy: 0.4873035066505441
+Bidirectional LSTM Test Macro F1: 0.16053466375046518
+
+
+--- SOURCE ---
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    classification_report,
+    confusion_matrix
+)
+
+test_accuracy_2 = accuracy_score(
+    test_true_2,
+    test_predictions_2
+)
+
+test_macro_f1_2 = f1_score(
+    test_true_2,
+    test_predictions_2,
+    average="macro"
+)
+
+test_weighted_f1_2 = f1_score(
+    test_true_2,
+    test_predictions_2,
+    average="weighted"
+)
+
+print(f"BERT 2 Test Accuracy: {test_accuracy_2:.4f}")
+print(f"BERT 2 Test Macro F1: {test_macro_f1_2:.4f}")
+print(f"BERT 2 Test Weighted F1: {test_weighted_f1_2:.4f}")
+--- OUTPUT ---
+BERT 2 Test Accuracy: 0.5147
+BERT 2 Test Macro F1: 0.2034
+BERT 2 Test Weighted F1: 0.4485
+
+
